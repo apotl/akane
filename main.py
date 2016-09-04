@@ -1,3 +1,9 @@
 #!/usr/bin/env python3
 
-print('wip')
+from akane import Akane
+
+a = Akane()
+
+print('Starting archival...')
+a.start()
+print('Archival complete.')
