@@ -9,19 +9,28 @@ from models import Board, Thread, Post, Image
 import cfg
 
 class BaseScraper:
-	def _build_db_path(self,db_name):
-		return "sqlite:////" + cfg.DB_ROOT + db_name + ".db"
+	_build_db_path = cfg.build_db_path
+
+	def _initialize_engine_and_session(self):
+		self._engine = create_engine(cfg.build_db_path('mysql'))
+		self.Session = sessionmaker(bind=self._engine)
+
+	def _connect(self):
+		self.conn = self._engine.connect()
+		self.session = self.Session(bind=self.conn)
+
+	def _disconnect(self):
+		self.conn.close()
+		self.session.close()
+
 
 class BoardScraper(BaseScraper):
 	def __init__(self,board):
 		self.board = board
-		self.db_path = self._build_db_path(cfg.DB_MAIN_NAME)
+		self.db_path = cfg.build_db_path('mysql')
 
-		self._engine = create_engine(self._build_db_path(cfg.DB_MAIN_NAME))
-		self.Session = sessionmaker(bind=self._engine)
-
-		self.conn = self._engine.connect()
-		self.session = self.Session(bind=self.conn)
+		self._initialize_engine_and_session()
+		self._connect()
 
 		query = self.session.query(Board).filter(Board.id == self.board.id)
 		if len(list(query)) != 1:
@@ -38,28 +47,29 @@ class BoardScraper(BaseScraper):
 			self.board_json_by_thread += [thread for thread in page["threads"] if thread["resto"] == 0]
 
 		self.thread_scrapers = []
+		self._disconnect()
 
 	def initialize_available_thread_scrapers(self):
+		self._connect()
 		for thread_json in self.board_json_by_thread:
 			if len(list(self.session.query(Thread).filter(Thread.no == thread_json['no']))) == 0:
 				thread = Thread()
 				thread.no = thread_json["no"]
 				thread.board_id = self.board.id
 				self.thread_scrapers += [ThreadScraper(thread)]
+		self._disconnect()
 
 	def start(self):
+		self._connect()
 		for thread_scraper in self.thread_scrapers:
 			thread_scraper.start()
+		self._disconnect()
 
 class ThreadScraper(BaseScraper):
 	def __init__(self,thread):
 		self.thread = thread
 
-		self._engine = create_engine(self._build_db_path(cfg.DB_MAIN_NAME))
-		self.Session = sessionmaker(bind=self._engine)
-
-		self.conn = self._engine.connect()
-		self.session = self.Session(bind=self.conn)
+		self._initialize_engine_and_session()
 
 	def get_json(self):
 		query = self.session.query(Board).filter(Board.id == self.thread.board_id)
@@ -88,7 +98,7 @@ class ThreadScraper(BaseScraper):
 	def initialize_image_scrapers(self):
 		for post_json in self.thread_by_posts:
 			post = self.session.query(Post).filter(Post.no == post_json['no']).first()
-			if len(list(self.session.query(Image).filter(Image.post_id == post.id))) == 0:
+			if post and len(list(self.session.query(Image).filter(Image.post_id == post.id))) == 0:
 				image = Image()
 				image.deserialize(post_json)
 				if image.tim or image.filedeleted == 1:
@@ -105,6 +115,7 @@ class ThreadScraper(BaseScraper):
 				break
 
 	def start(self):
+		self._connect()
 		self.get_json()
 		self.save()
 
@@ -117,33 +128,28 @@ class ThreadScraper(BaseScraper):
 			self.initialize_image_scrapers()
 			for image_scraper in self.image_scrapers:
 				image_scraper.start()
+		self._disconnect()
 
 class PostScraper(BaseScraper):
 	def __init__(self,post):
 		self.post = post
 
-		self._engine = create_engine(self._build_db_path(cfg.DB_MAIN_NAME))
-		self.Session = sessionmaker(bind=self._engine)
-
-		self.conn = self._engine.connect()
-		self.session = self.Session(bind=self.conn)
+		self._initialize_engine_and_session()
 
 	def save(self):
 		self.session.add(self.post)
 		self.session.commit()
 
 	def start(self):
+		self._connect()
 		self.save()
+		self._disconnect()
 
 class ImageScraper(BaseScraper):
 	def __init__(self,image):
 		self.image = image
 
-		self._engine = create_engine(self._build_db_path(cfg.DB_MAIN_NAME))
-		self.Session = sessionmaker(bind=self._engine)
-
-		self.conn = self._engine.connect()
-		self.session = self.Session(bind=self.conn)
+		self._initialize_engine_and_session()
 
 	def save(self):
 		self.session.add(self.image)
@@ -166,5 +172,7 @@ class ImageScraper(BaseScraper):
 			itfile.write(image_t_data)
 
 	def start(self):
+		self._connect()
 		self.save()
 		self.download()
+		self._disconnect()

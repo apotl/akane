@@ -1,0 +1,7 @@
+on debian jessie:
+- libmysqlclient-dev
+- python3-dev
+on the python3 repo
+- sqlalchemy
+- mysqlclient
+- ??pymysql??

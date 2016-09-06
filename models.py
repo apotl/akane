@@ -1,7 +1,17 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, ForeignKey
 
+def deserialize(self,json_obj):
+	for col in json_obj.keys():
+		db_col = col
+		if col == 'id':
+			db_col = 'poster_id'
+		if type(json_obj[col]) == type(''):
+			json_obj[col] = json_obj[col].encode('utf-8')
+		setattr(self,db_col,json_obj[col])
+
 base = declarative_base()
+base.deserialize = deserialize
 
 class Board(base):
 	__tablename__ = 'boards'
@@ -35,13 +45,6 @@ class Thread(base):
 	sub = Column(String)
 	tag = Column(String)
 
-	def deserialize(self,json_obj):
-		for col in json_obj.keys():
-			db_col = col
-			if col == 'id':
-				db_col = 'poster_id'
-			setattr(self,db_col,json_obj[col])
-
 class Post(base):
 	__tablename__ = 'posts'
 
@@ -58,13 +61,6 @@ class Post(base):
 	country = Column(String)
 	poster_id = Column(String)
 	trip = Column(String)
-
-	def deserialize(self,json_obj):
-		for col in json_obj.keys():
-			db_col = col
-			if col == 'id':
-				db_col = 'poster_id'
-			setattr(self,db_col,json_obj[col])
 
 class Image(base):
 	__tablename__ = 'images'
@@ -85,11 +81,3 @@ class Image(base):
 	tn_h = Column(String)
 	w = Column(String)
 	h = Column(String)
-
-	def deserialize(self,json_obj):
-		for col in json_obj.keys():
-			db_col = col
-			if col == 'id':
-				db_col = 'poster_id'
-			setattr(self,db_col,json_obj[col])
-

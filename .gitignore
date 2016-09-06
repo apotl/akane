@@ -91,3 +91,4 @@ ENV/
 # other
 archiver.py
 *.db
+cfg.py
