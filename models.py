@@ -51,6 +51,7 @@ class Post(base):
 
 	no = Column(Integer, unique=True, nullable=False)
 	time = Column(Integer, nullable=False)
+	name = Column(String, nullable=False)
 
 	capcode = Column(String)
 	com = Column(String)
