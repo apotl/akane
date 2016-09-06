@@ -35,8 +35,8 @@ create table if not exists posts (
 
 	no integer unique not null,
 	time integer not null,
-	name text not null,
 
+	name text,
 	capcode text,
 	com text,
 	country text,
