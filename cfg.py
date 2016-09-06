@@ -7,6 +7,7 @@ def _build_akane_path(rel):
 DB_ROOT = _build_akane_path('data/db')
 DB_MAIN_NAME = "archiver"
 DB_ASSETS = _build_akane_path('data/db/assets')
+DB_THUMBS = _build_akane_path('data/db/thumbs')
 
 def _get_schema(filename):
 	with open(DB_ROOT + filename) as schemafile:

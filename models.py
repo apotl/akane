@@ -86,3 +86,10 @@ class Image(base):
 	w = Column(String)
 	h = Column(String)
 
+	def deserialize(self,json_obj):
+		for col in json_obj.keys():
+			db_col = col
+			if col == 'id':
+				db_col = 'poster_id'
+			setattr(self,db_col,json_obj[col])
+
