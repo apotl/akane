@@ -4,7 +4,8 @@ create table if not exists boards (
 
 	frequency integer not null,
 	quiet integer not null,
-	get_images integer not null
+	get_images integer not null,
+	enabled integer not null
 );
 create table if not exists threads (
 	id integer primary key autoincrement not null,

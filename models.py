@@ -12,6 +12,7 @@ class Board(base):
 	frequency = Column(Integer, nullable=False)
 	quiet = Column(Integer, nullable=False)
 	get_images = Column(Integer, nullable=False)
+	enabled = Column(Integer, nullable=False)
 
 class Thread(base):
 	__tablename__ = 'threads'

@@ -23,7 +23,7 @@ class BoardScraper(BaseScraper):
 		self.conn = self._engine.connect()
 		self.session = self.Session(bind=self.conn)
 
-		query = self.session.query(Board).filter(Board.id == self.board.id)
+		query = self.session.query(Board).filter(Board.id == self.board.id, Board.enabled == 1)
 		if len(list(query)) != 1:
 			raise IndexError("Board record with supplied id not found")
 
