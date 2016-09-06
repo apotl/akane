@@ -18,12 +18,11 @@ class Akane():
 		self.board_scrapers = []
 
 	def initialize_board_scrapers(self):
-		board_ids = [id[0] for id in list(self.session.query(models.Board.id))]
+		boards = self.session.query(models.Board)
 
-		for id in board_ids:
-			board = models.Board()
-			board.id = id
-			self.board_scrapers += [scraper.BoardScraper(board)]
+		for board in boards:
+			if board.enabled == 1:
+				self.board_scrapers += [scraper.BoardScraper(board)]
 
 	def start(self):
 		for board_scraper in self.board_scrapers:

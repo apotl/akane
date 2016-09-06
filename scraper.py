@@ -23,7 +23,7 @@ class BoardScraper(BaseScraper):
 		self.conn = self._engine.connect()
 		self.session = self.Session(bind=self.conn)
 
-		query = self.session.query(Board).filter(Board.id == self.board.id, Board.enabled == 1)
+		query = self.session.query(Board).filter(Board.id == self.board.id)
 		if len(list(query)) != 1:
 			raise IndexError("Board record with supplied id not found")
 
@@ -76,6 +76,14 @@ class ThreadScraper(BaseScraper):
 		
 		self.columns = [col for col in dir(self.thread) if col[0] != '_']
 
+	def initialize_available_post_scrapers(self):
+		for post_json in self.thread_by_posts:
+			if len(list(self.session.query(Post).filter(Post.no == post_json['no']))) == 0:
+				post = Post()
+				post.deserialize(post_json)
+				post.thread_id = self.thread.id
+				self.post_scrapers += [PostScraper(post)]
+
 	def save(self):
 		for post_json in self.thread_by_posts:
 			if post_json['resto'] == 0:
@@ -89,17 +97,30 @@ class ThreadScraper(BaseScraper):
 		self.get_json()
 		self.save()
 
+		self.initialize_available_post_scrapers()
+		for post_scraper in self.post_scrapers:
+			post_scraper.start()
+
+class PostScraper(BaseScraper):
+	def __init__(self,post):
+		self.post = post
+
+		self._engine = create_engine(self._build_db_path(cfg.DB_MAIN_NAME))
+		self.Session = sessionmaker(bind=self._engine)
+
+		self.conn = self._engine.connect()
+		self.session = self.Session(bind=self.conn)
+
+	def save(self):
+		self.session.add(self.post)
+		self.session.commit()
+
+	def start(self):
+		self.save()
+
 class ImageScraper(BaseScraper):
 	def __init__(self,image):
 		self.image = image
 
 	def start(self):
 		pass
-
-class PostScraper(BaseScraper):
-	def __init__(self,Post):
-		self.post = post
-
-	def start(self):
-		pass
-

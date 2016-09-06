@@ -58,6 +58,13 @@ class Post(base):
 	poster_id = Column(String)
 	trip = Column(String)
 
+	def deserialize(self,json_obj):
+		for col in json_obj.keys():
+			db_col = col
+			if col == 'id':
+				db_col = 'poster_id'
+			setattr(self,db_col,json_obj[col])
+
 class Image(base):
 	__tablename__ = 'images'
 
