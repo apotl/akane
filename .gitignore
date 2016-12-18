@@ -91,3 +91,6 @@ ENV/
 # other
 archiver.py
 *.db
+
+# vscode
+.vscode/
